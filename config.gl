@@ -1,0 +1,81 @@
+apache traffic server 初步配置
+
+#主要有3个配置文件
+records.config 是 key-value 格式的配置文件，负责大部分全局的选项设置，即主配置文件。
+storage.config 用于指定磁盘存储。
+remap.config   定义映射规则，用于请求的重写（rewrite），反向代理即在此配置。
+
+records.config 中关键的配置
+CONFIG proxy.config.exec_thread.autoconfig INT 1
+
+CONFIG proxy.config.exec_thread.autoconfig.scale FLOAT 2.0
+
+CONFIG proxy.config.exec_thread.limit INT 2   # 经观察是每个核创建的线程数，官方文档中未提及
+
+CONFIG proxy.config.cluster.ethernet_interface STRING eth0 # 设置以太网接口
+
+CONFIG proxy.config.http.server_port INT 8080  # 监听端口，反向代理通常为80
+
+LOCAL proxy.local.incoming_ip_to_bind STRING 0.0.0.0 # 绑定的 IP，可省略，默认即为 0.0.0.0
+
+CONFIG proxy.config.http.cache.http INT 1 # 打开缓存功能
+
+CONFIG proxy.config.cache.ram_cache.size INT 512M  # RAM 缓存大小
+
+CONFIG proxy.config.reverse_proxy.enabled INT 1   # 打开
+
+CONFIG proxy.config.url_remap.remap_required INT 1 # 1为只反向代理，0为正向+反向代理
+
+CONFIG proxy.config.url_remap.pristine_host_hdr INT 0
+
+CONFIG proxy.config.ssl.enabled INT 0 # 关闭SSL
+
+CONFIG proxy.config.ssl.server.cert.filename STRING server.pem
+
+CONFIG proxy.config.http.server_max_connections INT 2000  # 同源服务器的最大连接数
+
+CONFIG proxy.config.http.keep_alive_no_activity_timeout_out INT 60 # 当一个事务结束后同原服务器保持连接的时间
+
+ 
+
+remap.config  配置
+
+map http://cdn.example.com/js           http://js.example.com  # 通过 DNS 轮询可实现负载均衡
+reverse_map http://js.example.com     http://cdn.example.com/js   # reverse_map 能在源服务器 有 HTTP 重定向跳转时，修改重定向请求，即重写 Location 头部内容
+
+map http://cdn.example.com/css        http://css.example.com
+reverse_map http://css.example.com  http://cdn.exampe.com/css
+
+map http://cdn.example.com/img        http://img.example.com
+reverse_map http://img.example.com  http://cdn.example.com/img
+
+storage.config 配置
+/data1 67108864   # 指定一个或多个目录，注明缓存大小，也可直接指定 raw 分区(裸盘)，详见storage.config 中的注释说明
+
+ 
+更详细的配置可参考官方管理指南 http://trafficserver.apache.org/docs/v2/admin/
+
+
+服务控制
+
+运行 trafficserver start
+结束 trafficserver stop
+重启 trafficserver restart 
+命令行工具、监控
+ /usr/local/bin/traffic_line 需用管理员身份执行
+
+查看帮助 traffic_line -h
+查看变量的值 traffic_line -r 变量名 （变量名见官方管理指南附录 C ，含 TS 运行时统计数据）
+给变量赋值 traffic_line -s 变量名 -v 值   （变量名见 records.config ）
+不重启 TS 使 配置生效 traffic_line -x
+ /usr/local/bin/traffic_shell 需用管理员身份执行，进入后提示符为“%”
+
+查看帮助 man traffic_shell （由于 开发者疏忽，暂不能用 ）
+show 命令，如 %show:cache-stats 查看缓存统计，如命中情况，缓存大小；如 %show:proxy-stats 查看命中率
+config 命令，如 %config:logging event disable 关闭日志；如 %config:cache clear ，清除缓存， config 命令作出的修改都会立即生效
+ /usr/local/bin/traffic_logcat 日志查看工具
+
+traffic_logcat -h 获得帮助
+查看二进制日志 traffic_logcat 日志文件名
+Traffic Server 系统自身的运行日志可在 /var/log/message 中查看（ centos ），用于排错
+traffic_logstats 提供了基于日志的统计功能

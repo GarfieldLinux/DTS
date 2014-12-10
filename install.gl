@@ -1,0 +1,7 @@
+#apache traffic server installation
+git clone git@github.com:apache/trafficserver.git 
+cd trafficserver
+autoreconf -if
+./configure
+make 
+make install  
