@@ -75,6 +75,15 @@ show 命令，如 %show:cache-stats 查看缓存统计，如命中情况，缓�
 config 命令，如 %config:logging event disable 关闭日志；如 %config:cache clear ，清除缓存， config 命令作出的修改都会立即生效
  /usr/local/bin/traffic_logcat 日志查看工具
 
+
+TServer缓存模式常用命令行如下：
+traffic_line -r proxy.node.cache_hit_ratio_avg_10s #查询当前缓存服务命中率
+traffic_line -r proxy.node.current_server_connections #到后端源的连接数
+traffic_line -r proxy.node.current_client_connections #前端用户到TServer的连接数
+traffic_line -r proxy.node.user_agent_xacts_per_second #平均每秒处理的并发数
+traffic_line -r proxy.node.client_throughput_out #当前TServer输出到前端的带宽流量（单位Mbps）
+
+
 traffic_logcat -h 获得帮助
 查看二进制日志 traffic_logcat 日志文件名
 Traffic Server 系统自身的运行日志可在 /var/log/message 中查看（ centos ），用于排错
