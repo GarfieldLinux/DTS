@@ -41,7 +41,7 @@ CONFIG proxy.config.http.keep_alive_no_activity_timeout_out INT 60 # 当一个�
 remap.config  配置
 
 map http://cdn.example.com/js           http://js.example.com  # 通过 DNS 轮询可实现负载均衡
-reverse_map http://js.example.com     http://cdn.example.com/js   # reverse_map 能在源服务器 有 HTTP 重定向跳转时，修改重定向请求，即重写 Location 头部内容
+reverse_map http://js.example.com     http://cdn.example.com/js # reverse_map 能在源服务器有HTTP 重定向跳转时，修改重定向请求，即重写 Location 头部内容
 
 map http://cdn.example.com/css        http://css.example.com
 reverse_map http://css.example.com  http://cdn.exampe.com/css
@@ -54,6 +54,15 @@ storage.config 配置
 
  
 更详细的配置可参考官方管理指南 http://trafficserver.apache.org/docs/v2/admin/
+
+
+配置ats在源服务器没有定义缓存的情况缓存文件
+traffic_line -s proxy.config.http.cache.required_headers -v 0
+Via码需要启用的，需要执行：
+traffic_line -s  proxy.config.http.insert_request_via_str -v 1
+traffic_line -s  proxy.config.http.insert_response_via_str -v 2
+traffic_line -x
+
 
 
 服务控制
